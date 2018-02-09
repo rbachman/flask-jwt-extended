@@ -131,7 +131,7 @@ def jwt_allowed_roles(roles=[]):
                 raise UserClaimsVerificationError('User claims verification failed')
             if roles:
                 print jwt_data
-                any_in = any(i in roles for i in jwt_data['user_claims']['roles'])
+                any_in = any(i in roles for i in jwt_data[config.user_claims_key]['roles'])
                 if not any_in:
                     raise UserClaimsVerificationError('User not a member of roles authorized for this endpoint.')
             _load_user(jwt_data[config.identity_claim_key])
