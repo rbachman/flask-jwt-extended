@@ -63,7 +63,6 @@ class UserLoadError(JWTExtendedException):
     """
     pass
 
-
 class UserClaimsVerificationError(JWTExtendedException):
     """
     Error raised when the claims_verification_callback function returns False,
