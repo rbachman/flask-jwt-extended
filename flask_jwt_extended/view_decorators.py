@@ -16,7 +16,7 @@ from flask_jwt_extended.exceptions import (
 )
 from flask_jwt_extended.utils import (
     has_user_loader, user_loader, token_in_blacklist, decode_token,
-    has_token_in_blacklist_callback, verify_token_claims
+    has_token_in_blacklist_callback, verify_token_claims,get_jwt_claims
 )
 
 
@@ -39,7 +39,6 @@ def jwt_required(fn):
         _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
-
 
 def jwt_optional(fn):
     """
@@ -109,6 +108,27 @@ def jwt_refresh_token_required(fn):
     def wrapper(*args, **kwargs):
         jwt_data = _decode_jwt_from_request(request_type='refresh')
         ctx_stack.top.jwt = jwt_data
+        _load_user(jwt_data[config.identity_claim_key])
+        return fn(*args, **kwargs)
+    return wrapper
+
+def jwt_allowed_roles(fn,roles=[]):
+    """
+    A decorator to protect a Flask endpoint with a user claim 'role' <list type>.
+
+    If you decorate an endpoint with this, it will ensure that the requester
+    has a valid access token before allowing the endpoint to be called. This
+    does not check the freshness of the access token.
+
+    See also: :func:`~flask_jwt_extended.fresh_jwt_required`
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        jwt_data = _decode_jwt_from_request(request_type='access')
+        print jwt_data
+        ctx_stack.top.jwt = jwt_data
+        if not verify_token_claims(jwt_data[config.user_claims_key]):
+            raise UserClaimsVerificationError('User claims verification failed')
         _load_user(jwt_data[config.identity_claim_key])
         return fn(*args, **kwargs)
     return wrapper
