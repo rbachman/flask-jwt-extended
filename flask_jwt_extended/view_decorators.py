@@ -112,26 +112,28 @@ def jwt_refresh_token_required(fn):
         return fn(*args, **kwargs)
     return wrapper
 
-def jwt_allowed_roles(fn,roles=[]):
-    """
-    A decorator to protect a Flask endpoint with a user claim 'role' <list type>.
+def jwt_allowed_roles(roles=[]):
+    def real_func(fn):
+        """
+        A decorator to protect a Flask endpoint with a user claim 'role' <list type>.
 
-    If you decorate an endpoint with this, it will ensure that the requester
-    has a valid access token before allowing the endpoint to be called. This
-    does not check the freshness of the access token.
+        If you decorate an endpoint with this, it will ensure that the requester
+        has a valid access token before allowing the endpoint to be called. This
+        does not check the freshness of the access token.
 
-    See also: :func:`~flask_jwt_extended.fresh_jwt_required`
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        jwt_data = _decode_jwt_from_request(request_type='access')
-        print jwt_data
-        ctx_stack.top.jwt = jwt_data
-        if not verify_token_claims(jwt_data[config.user_claims_key]):
-            raise UserClaimsVerificationError('User claims verification failed')
-        _load_user(jwt_data[config.identity_claim_key])
-        return fn(*args, **kwargs)
-    return wrapper
+        See also: :func:`~flask_jwt_extended.fresh_jwt_required`
+        """
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            jwt_data = _decode_jwt_from_request(request_type='access')
+            print jwt_data
+            ctx_stack.top.jwt = jwt_data
+            if not verify_token_claims(jwt_data[config.user_claims_key]):
+                raise UserClaimsVerificationError('User claims verification failed')
+            _load_user(jwt_data[config.identity_claim_key])
+            return fn(*args, **kwargs)
+        return wrapper
+    return real_func
 
 
 def _load_user(identity):
